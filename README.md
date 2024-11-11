@@ -58,6 +58,25 @@ I wanted a way to monitor my print while at work. I could have used the Bambu Ha
      rtsp://localhost:8554/bambu
      ```
 3. Now your OBS should have the Printer's camera as a source!
+4. Next, create a shortcut to OBS and place it in the same directory as **go2rtc**. Edit the properties and add this to the end of the `Target` field:
+
+   ```bash
+   --startstreaming --profile "X1CStream" --disable-shutdown-check
+   ```
+
+5. Download the `start_stream.bat` file from the repo and place it in the same directory as **go2rtc** or just create a new `*.bat` file with these commands:
+
+   ```bash
+   @echo off
+   REM Launch go2rtc
+   start /D "%~dp0" go2rtc.exe
+
+   REM Wait for a few seconds
+   timeout /t 5 /nobreak > nul
+
+   REM Launch OBS
+   start "" "%~dp0\obs.lnk"
+   ```
 
 #### Setting up Scheduled Task to launch **go2rtc** and **OBS**
 This section will vary depending on what machine you are using to host **OBS** and **go2rtc**, but this is what worked best for me. At first, I thought about launching the `start_stream.bat` through an SSH command from Home Assistant but the issue with that is that **go2rtc** and **OBS** would be launched as a service, which doesn't work with **OBS**. I stumbled upon this solution here: [Open Windows application via SSH](https://www.reddit.com/r/SiriShortcuts/comments/9h3w36/open_windows_application_via_ssh/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button). In the event that the post gets deleted, this is what it said:
