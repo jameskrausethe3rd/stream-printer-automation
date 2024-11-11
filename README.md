@@ -25,7 +25,7 @@ I wanted a way to monitor my print while at work. I could have used the Bambu Ha
 ### Installation
 #### Setting up **go2rtc**
 1. Download the latest version of **[go2rtc](https://github.com/AlexxIT/go2rtc)** and put it somewhere safe. I put mine in `C:\Users\USERNAME\Documents\PrinterStream`.
-2. In the same directory as **go2rtc**, you'll want to create a file called `go2rtc.yaml`(or copy the default from the repo and remove the `.DEFAULT` extension.
+2. In the same directory as **go2rtc**, you'll want to create a file called `go2rtc.yaml`(or copy the default from the repo and remove the `.DEFAULT` extension).
 3. Now go to your printer. You'll need to activate **LAN Mode Liveview** (Toggle the switch in section 3 to **ON**) and take note of your **Access Code** (Section 2):
    
      ![20240918-161124](https://github.com/user-attachments/assets/c4127b9e-92ee-4bc6-ac0b-4e34bda285ae)
@@ -52,6 +52,11 @@ I wanted a way to monitor my print while at work. I could have used the Bambu Ha
 1. Download the latest version of **[OBS Studio](https://obsproject.com/)** or any other broadcasting software and follow the installation guides.
 2. Add a new **VLC Video Source** to your scene and configure it as so:
 ![image](https://github.com/user-attachments/assets/eaea4ccd-22a5-40c3-a5da-ab07f736edda)
+
+     URL:
+     ```bash
+     rtsp://localhost:8554/bambu
+     ```
 3. Now your OBS should have the Printer's camera as a source!
 
 #### Setting up Scheduled Task to launch **go2rtc** and **OBS**
@@ -65,7 +70,7 @@ This section will vary depending on what machine you are using to host **OBS** a
 
   ***`schtasks /run /i /TN <task name>`***
 
-The program you will want to start is `start_stream.bat` and I named my task `Start Printer Stream`
+We aren't gonna need the last part about the Siri Shortcuts so we can ignore that. The program you will want to start is `start_stream.bat` and I named my task `Start Printer Stream`
 
 If more clarification is needed, follow these steps:
 - [Installing OpenSSH on Windows 10](https://winscp.net/eng/docs/guide_windows_openssh_server)
@@ -97,10 +102,12 @@ If more clarification is needed, follow these steps:
 
 9. The outputted key should be in the format `ssh-rsa ... root@XXXXXXX-ssh`. Copy this key.
 10. This key will need to be added to our Windows machine's `authorized_keys` or `administrators_authorized_keys` file.
-      If the user you are using to host OBS **isn't** an **Administrator**, you will add the key to the `authorized_keys` file at `C:\Users\USERNAME\.ssh\` or create the files\folders if they don't exist.
-      If the user you are using to host OBS **is* an **Administrator**, you will add the key to the `administrators_authorized_keys` file at `C:\ProgramData\ssh` or create the files\folders if they don't exist.
-    
-11. This part is ***IMPORTANT!!*** In Windows, you need to have ***very** specific permissions to those files in order for them to work properly. The easiest way to get the correct permission is to run this command in a **Administrator** Powershell:
+
+     If the user you are using to host OBS **isn't** an **Administrator**, you will add the key to the `authorized_keys` file at `C:\Users\USERNAME\.ssh\` or create the files\folders if they don't exist.
+
+     If the user you are using to host OBS **is** an **Administrator**, you will add the key to the `administrators_authorized_keys` file at `C:\ProgramData\ssh` or create the files\folders if they don't exist.
+
+11. This part is ***IMPORTANT!!*** In Windows, you need to have ***very*** specific permissions to those files in order for them to work properly. The easiest way to get the correct permission is to run this command in a **Administrator** Powershell:
 
     **For Non-administrators:**
     ```bash
@@ -141,3 +148,26 @@ If more clarification is needed, follow these steps:
     `IP_ADDRESS`: IP Address of the remote machine
 
     `SCHEDULED_TASK_NAME`: The name of the scheduled task created earlier.
+
+15. Restart **Home Assistant** after the changes to `configuration.yml`. Then, you'll want to create an **Automation** to run the script. You can switch to **Edit in YAML** mode to copy the below configuration in:
+
+     ```bash
+     alias: Start X1C Stream
+     description: When the printer starts printing, send an SSH command.
+     triggers:
+       - trigger: state
+         entity_id:
+           - sensor.YOUR_PRINTER_print_status
+         from: idle
+         to: prepare
+     conditions: []
+     actions:
+       - action: shell_command.start_printer_stream
+         metadata: {}
+         data: {}
+     mode: single
+     ```
+
+     `YOUR_PRINTER`: The entity ID of your printer
+
+16. Switch back to **Edit in Visual Editor** and click the 3 dots and then **run** the shell command to test that it works. If it does, then you have everyting setup! You now have Home Assistant configured to send an SSH command to a remote machine to start a stream!
