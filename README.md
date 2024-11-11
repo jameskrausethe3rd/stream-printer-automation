@@ -189,4 +189,4 @@ If more clarification is needed, follow these steps:
 
      `YOUR_PRINTER`: The entity ID of your printer
 
-16. Switch back to **Edit in Visual Editor** and click the 3 dots and then **run** the shell command to test that it works. If it does, then you have everyting setup! You now have Home Assistant configured to send an SSH command to a remote machine to start a stream!
+16. Switch back to **Edit in Visual Editor** and click the 3 dots and then **run** the shell command to test that it works. If it does, then you have everything setup! You now have Home Assistant configured to send an SSH command to a remote machine to start a stream of your printer's camera!
