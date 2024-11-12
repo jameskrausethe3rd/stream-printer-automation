@@ -78,6 +78,13 @@ I wanted a way to monitor my print while at work. I could have used the Bambu Ha
    start "" "%~dp0\obs.lnk"
    ```
 
+   Or if you wish to not have a shortcut, update the section underneath `REM Launch OBS` with this, updating the path and profile name as needed:
+
+   ```bash
+   cd "C:\Program Files\obs-studio\bin\64bit\"
+   obs64.exe --profile "X1CStream" --startstreaming --disable-shutdown-check
+   ```
+
 #### Setting up Scheduled Task to launch **go2rtc** and **OBS**
 This section will vary depending on what machine you are using to host **OBS** and **go2rtc**, but this is what worked best for me. At first, I thought about launching the `start_stream.bat` through an SSH command from Home Assistant but the issue with that is that **go2rtc** and **OBS** would be launched as a service, which doesn't work with **OBS**. I stumbled upon this solution here: [Open Windows application via SSH](https://www.reddit.com/r/SiriShortcuts/comments/9h3w36/open_windows_application_via_ssh/?utm_source=share&utm_medium=web3x&utm_name=web3xcss&utm_term=1&utm_content=share_button). In the event that the post gets deleted, this is what it said:
 
@@ -159,7 +166,7 @@ If more clarification is needed, follow these steps:
 
     ```bash
     shell_command:
-      start_printer_stream: 'ssh USERNAME@IP_ADDRESS -i /config/.ssh/id_rsa -t ''cmd /c schtasks /run /i /TN "SCHEDULED_TASK_NAME"'''
+      start_printer_stream: 'ssh -o StrictHostKeyChecking=no USERNAME@IP_ADDRESS -i /config/.ssh/id_rsa -t ''cmd /c schtasks /run /i /TN "SCHEDULED_TASK_NAME"'''
     ```
 
     `USERNAME`: Remote machine username
@@ -172,14 +179,16 @@ If more clarification is needed, follow these steps:
 
      ```bash
      alias: Start X1C Stream
-     description: When the printer starts printing, send an SSH command.
+     description: When the printer starts printing, start a Twitch Stream.
      triggers:
        - trigger: state
          entity_id:
-           - sensor.YOUR_PRINTER_print_status
-         from: idle
-         to: prepare
-     conditions: []
+           - sensor.x1c_00m09a351802701_current_stage
+         to: heatbed_preheating
+     conditions:
+       - condition: numeric_state
+         entity_id: sensor.x1c_00m09a351802701_remaining_time
+         above: "30"
      actions:
        - action: shell_command.start_printer_stream
          metadata: {}
@@ -188,5 +197,7 @@ If more clarification is needed, follow these steps:
      ```
 
      `YOUR_PRINTER`: The entity ID of your printer
+    
+     `above: 30`: The time (in minutes) a print will take. I set this to 30 minutes to prevent streams being started when the print is short.
 
-16. Switch back to **Edit in Visual Editor** and click the 3 dots and then **run** the shell command to test that it works. If it does, then you have everything setup! You now have Home Assistant configured to send an SSH command to a remote machine to start a stream of your printer's camera!
+17. Switch back to **Edit in Visual Editor** and click the 3 dots and then **run** the shell command to test that it works. If it does, then you have everything setup! You now have Home Assistant configured to send an SSH command to a remote machine to start a stream of your printer's camera!
